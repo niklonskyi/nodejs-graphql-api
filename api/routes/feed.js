@@ -16,10 +16,12 @@ feedRouter.post(
       .trim()
       .isLength({ min: 5 }),
     body("content")
-      .trim()
+      .trim() 
       .isLength({ min: 5 }),
   ],
   feedController.createPost
 );
+
+feedRouter.get('/post/:postId', feedController.getPost); 
 
 export default feedRouter;
