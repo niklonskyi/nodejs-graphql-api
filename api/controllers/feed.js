@@ -103,6 +103,26 @@ function updatePost(req, res, next) {
   .catch(catchError); 
 }
 
+function deletePost(req, res, next) {
+  const postId = req.params.postId;
+  Post.findById(postId)
+  .then(post => {
+    if (!post) {
+      const error = new Error("Could not find the post.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    clearImage(post.imageUrl);
+    return Post.findByIdAndRemove(postId);
+  })
+  .then(result => {
+    console.log(result);
+    res.status(200).json({message: 'Post deleted succesfully.'});
+  })
+  .catch(catchError);
+}
+
 function clearImage(filePath) {
   filePath = path.join(path.dirname(filePath), '..', '..', filePath);
   fs.unlink(filePath, err => console.log(err));
@@ -116,4 +136,4 @@ function catchError(err) {
   next(err);
 }
 
-export { getPosts, createPost, getPost, updatePost };
+export { getPosts, createPost, getPost, updatePost, deletePost };
