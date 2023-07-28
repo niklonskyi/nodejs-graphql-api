@@ -28,4 +28,6 @@ authRouter.put("/signup", [
     .isEmpty(),
 ], authController.signUp);
 
+authRouter.post('/login', authController.login);
+
 export default authRouter;
