@@ -1,7 +1,9 @@
 import { validationResult } from "express-validator";
-import Post from "../models/post.js";
-import fs from 'fs';
+import fs from "fs";
 import path from "path";
+
+import Post from "../models/post.js";
+import User from "../models/user.js";
 
 function getPosts(req, res, next) {
   const currentPage = req.query.page || 1;
@@ -35,22 +37,29 @@ function createPost(req, res, next) {
     throw error;
   }
 
+  let creator;
   const post = new Post({
     title: req.body.title,
     content: req.body.content,
     imageUrl: req.file.path.replace(/\\/g, "/"),
-    creator: {
-      name: "Artem",
-    },
+    creator: req.userId,
   });
 
   post
     .save()
     .then((result) => {
-      console.log(result);
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      creator = user;
+      user.posts.push(post);
+      return user.save();
+    })
+    .then((result) => {
       res.status(201).json({
         message: "Post created successfully!",
-        post: result,
+        post: post,
+        creator: { _id: creator._id, name: creator.name },
       });
     })
     .catch(catchError);
