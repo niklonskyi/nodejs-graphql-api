@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react';
+import { io } from 'socket.io-client';
 
 import Post from '../../components/Feed/Post/Post';
 import Button from '../../components/Button/Button';
@@ -37,9 +38,11 @@ class Feed extends Component {
       .then(resData => {
         this.setState({ status: resData.status });
       })
-      .catch(this.catchError);
+      .catch(this.catchError); 
 
     this.loadPosts();
+    const socket = io('http://localhost:8080')
+    socket.connect();
   }
 
   loadPosts = direction => {
