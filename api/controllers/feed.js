@@ -2,6 +2,7 @@ import { validationResult } from "express-validator";
 import fs from "fs";
 import path from "path";
 
+import { getIO } from "../socket.js";
 import Post from "../models/post.js";
 import User from "../models/user.js";
 
@@ -53,6 +54,7 @@ function createPost(req, res, next) {
     .then((user) => {
       creator = user;
       user.posts.push(post);
+      getIO().emit('posts', { action: 'create', post: post });
       return user.save();
     })
     .then((result) => {
