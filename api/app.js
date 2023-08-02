@@ -6,6 +6,7 @@ import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import "dotenv/config";
 import { Server } from "socket.io";
+import { init } from "./socket.js";
 import { createServer } from "http";
 
 import feedRouter from "./routes/feed.js";
@@ -70,7 +71,7 @@ mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING)
   .then((res) => {
     // const server = app.listen(8080);
-    const io = new Server(httpServer, {
+    const io = init(httpServer, {
       cors: {
         origin: "http://localhost:3000",
         methods: ["GET", "POST"]
