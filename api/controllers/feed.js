@@ -15,6 +15,7 @@ function getPosts(req, res, next) {
     .then((count) => {
       totalItems = count;
       return Post.find()
+        .populate('creator')
         .skip((currentPage - 1) * perPage)
         .limit(perPage);
     })
@@ -54,7 +55,7 @@ function createPost(req, res, next) {
     .then((user) => {
       creator = user;
       user.posts.push(post);
-      getIO().emit('posts', { action: 'create', post: post });
+      getIO().emit('posts', { action: 'create', post: {...post._doc, creator: {_id: req.userId, name: user.name} }});
       return user.save();
     })
     .then((result) => {
