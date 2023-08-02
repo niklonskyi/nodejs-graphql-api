@@ -16,6 +16,7 @@ function getPosts(req, res, next) {
       totalItems = count;
       return Post.find()
         .populate('creator')
+        .sort({createdAt: -1})
         .skip((currentPage - 1) * perPage)
         .limit(perPage);
     })
@@ -104,14 +105,14 @@ function updatePost(req, res, next) {
     throw error;
   }
 
-  Post.findById(postId)
+  Post.findById(postId).populate('creator')
   .then(post => {
     if (!post) {
       const error = new Error("Could not find the post.");
       error.statusCode = 404;
       throw error;
     }
-    if (post.creator.toString() !== req.userId) {
+    if (post.creator._id.toString() !== req.userId) {
       const error = new Error('Not authorized');
       error.statusCode = 403;
       throw error;
@@ -125,6 +126,7 @@ function updatePost(req, res, next) {
     return post.save();
   })
   .then(result => {
+    getIO().emit('posts', { action: 'posts', post: result});
     res.status(200).json({ message: 'Post updated!', post: result});
   })
   .catch(catchError); 
