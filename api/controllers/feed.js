@@ -159,6 +159,7 @@ function deletePost(req, res, next) {
     return user.save();
   })
   .then(result => {
+    getIO().emit('posts', { action: 'delete', post: postId });
     res.status(200).json({message: 'Post deleted succesfully.'});
   })
   .catch(catchError);
