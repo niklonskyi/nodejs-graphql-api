@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react';
+import { io } from 'socket.io-client';
 
 import Post from '../../components/Feed/Post/Post';
 import Button from '../../components/Button/Button';
@@ -37,9 +38,49 @@ class Feed extends Component {
       .then(resData => {
         this.setState({ status: resData.status });
       })
-      .catch(this.catchError);
+      .catch(this.catchError); 
 
     this.loadPosts();
+    const socket = io('http://localhost:8080')
+    socket.connect();
+    socket.on('posts', data => {
+      if (data.action === 'create') {
+        this.addPost(data.post);
+      }
+      else if (data.action === 'update') {
+        this.updatePost(data.post);
+      }
+      else if (data.action === 'delete') {
+        this.loadPosts();
+      }
+    })
+  }
+
+  addPost = post => {
+    this.setState(prevState => {
+      const updatedPosts = [...prevState.posts];
+      if (prevState.postPage === 1) {
+        updatedPosts.pop();
+        updatedPosts.unshift(post);
+      }
+      return {
+        posts: updatedPosts,
+        totalPosts: prevState.totalPosts + 1
+      };
+    });
+  }
+
+  updatePost = post => {
+    this.setState(prevState => {
+      const updatedPosts = [...prevState.posts];
+      const updatedPostIndex = updatedPosts.findIndex(p => p._id === post._id);
+      if (updatedPostIndex > -1) {
+        updatedPosts[updatedPostIndex] = post;
+      }
+      return {
+        posts: updatedPosts
+      }
+    });
   }
 
   loadPosts = direction => {
@@ -160,17 +201,7 @@ class Feed extends Component {
           createdAt: resData.post.createdAt
         };
         this.setState(prevState => {
-          let updatedPosts = [...prevState.posts];
-          if (prevState.editPost) {
-            const postIndex = prevState.posts.findIndex(
-              p => p._id === prevState.editPost._id
-            );
-            updatedPosts[postIndex] = post;
-          } else if (prevState.posts.length < 2) {
-            updatedPosts = prevState.posts.concat(post);
-          }
           return {
-            posts: updatedPosts,
             isEditing: false,
             editPost: null,
             editLoading: false
@@ -208,10 +239,11 @@ class Feed extends Component {
       })
       .then(resData => {
         console.log(resData);
-        this.setState(prevState => {
-          const updatedPosts = prevState.posts.filter(p => p._id !== postId);
-          return { posts: updatedPosts, postsLoading: false };
-        });
+        this.loadPosts();
+        // this.setState(prevState => {
+        //   const updatedPosts = prevState.posts.filter(p => p._id !== postId);
+        //   return { posts: updatedPosts, postsLoading: false };
+        // });
       })
       .catch(err => {
         console.log(err);

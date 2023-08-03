@@ -5,6 +5,9 @@ import multer from "multer";
 import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import "dotenv/config";
+import { Server } from "socket.io";
+import { init } from "./socket.js";
+import { createServer } from "http";
 
 import feedRouter from "./routes/feed.js";
 import authRouter from "./routes/auth.js";
@@ -62,9 +65,22 @@ app.use((error, req, res, next) => {
   res.status(status).json({ message: message, data: data });
 });
 
+const httpServer = createServer(app);
+
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING)
   .then((res) => {
-    app.listen(8080);
+    // const server = app.listen(8080);
+    const io = init(httpServer, {
+      cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"]
+      }
+    });
+    io.on('connection', socket => {
+      console.log('Client connected');
+    });
+
+    httpServer.listen(8080);
   })
   .catch((err) => console.log(err));
